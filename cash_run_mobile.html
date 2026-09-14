@@ -1,0 +1,24 @@
+<!doctype html><html lang="fr"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Cash Run Mobile</title>
+<style>
+*{box-sizing:border-box}body{margin:0;overflow:hidden;background:#071016;font-family:Arial;color:#fff;touch-action:none}canvas{position:fixed;inset:0}
+#ui{position:fixed;top:12px;left:12px;background:#071016dd;border:1px solid #40ff8a;border-radius:14px;padding:10px 14px;font-weight:bold;z-index:2}#ui span{color:#40ff8a}
+#pad{position:fixed;bottom:18px;left:18px;display:grid;grid-template-columns:58px 58px 58px;gap:7px;z-index:3}button{width:58px;height:58px;border:0;border-radius:16px;background:#ffffff25;color:#fff;font-size:25px;font-weight:bold;backdrop-filter:blur(5px)}#up{grid-column:2}.empty{visibility:hidden}
+#jump{position:fixed;right:22px;bottom:28px;width:90px;height:90px;border-radius:50%;background:#40ff8add;color:#062412;font-size:15px;z-index:3}
+#menu{position:fixed;inset:0;background:#071016ee;display:flex;align-items:center;justify-content:center;z-index:5;text-align:center;padding:25px}.box{max-width:390px;padding:28px;border:1px solid #40ff8a;border-radius:20px;background:#101b22}.box button{width:180px;height:52px;background:#40ff8a;color:#062412;font-size:16px}
+</style><canvas id=c></canvas>
+<div id=ui>💸 CASH RUN<br>Liasses : <span id=n>0</span>/20 · <span id=s>0</span> €<br>⏱️ <span id=t>60</span>s</div>
+<div id=pad><button class=empty></button><button id=up>▲</button><button class=empty></button><button id=left>◀</button><button id=down>▼</button><button id=right>▶</button></div><button id=jump>SAUT</button>
+<div id=menu><div class=box><h1>💸 CASH RUN</h1><p>Récupère les 20 liasses avant la fin du chrono.</p><p>Utilise les boutons tactiles pour te déplacer.</p><button id=start>JOUER</button></div></div>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d');let W,H,p,b=[],keys={},score=0,time=60,on=0,last;
+function size(){W=innerWidth;H=innerHeight;c.width=W;c.height=H}onresize=size;size();
+function press(k,v){keys[k]=v}['up','down','left','right'].forEach(k=>{let e=document.getElementById(k);e.ontouchstart=e.onmousedown=()=>press(k,1);e.ontouchend=e.onmouseup=()=>press(k,0)});
+let jump=0;document.getElementById('jump').ontouchstart=()=>jump=1;
+document.getElementById('start').onclick=go;
+function go(){p={x:W/2,y:H/2,z:0,vz:0};b=[];score=0;time=60;for(let i=0;i<20;i++)b.push({x:35+Math.random()*(W-70),y:90+Math.random()*(H-140),r:12});on=1;last=performance.now();document.getElementById('menu').style.display='none';requestAnimationFrame(loop)}
+function loop(q){if(!on)return;let d=Math.min(.035,(q-last)/1000);last=q;time-=d;let dx=(keys.right?1:0)-(keys.left?1:0),dy=(keys.down?1:0)-(keys.up?1:0),l=Math.hypot(dx,dy)||1;p.x=Math.max(25,Math.min(W-25,p.x+dx/l*250*d));p.y=Math.max(80,Math.min(H-25,p.y+dy/l*250*d));if(jump&&p.z<=0)p.vz=500;jump=0;p.vz-=1100*d;p.z=Math.max(0,p.z+p.vz*d);if(p.z===0)p.vz=0;
+for(let i=b.length-1;i>=0;i--)if(Math.hypot(p.x-b[i].x,p.y-b[i].y)<30&&p.z<55){score+=500;b.splice(i,1)}
+document.getElementById('n').textContent=20-b.length;document.getElementById('s').textContent=score.toLocaleString('fr-FR');document.getElementById('t').textContent=Math.max(0,time).toFixed(1);draw();
+if(!b.length||time<=0){on=0;setTimeout(()=>{document.getElementById('menu').style.display='flex';document.querySelector('.box').innerHTML='<h1>'+(!b.length?'🏆 JACKPOT !':'⏱️ FIN !')+'</h1><p>'+score.toLocaleString('fr-FR')+' € récupérés</p><button onclick="go()">REJOUER</button>'},100)}else requestAnimationFrame(loop)}
+function draw(){let g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,'#1d3038');g.addColorStop(1,'#061016');x.fillStyle=g;x.fillRect(0,0,W,H);for(let i=0;i<W;i+=70){x.fillStyle='#14232b';x.fillRect(i,H-130-(i*13%150),55,160)}x.strokeStyle='#ffffff10';for(let i=0;i<W;i+=40){x.beginPath();x.moveTo(i,70);x.lineTo(i,H);x.stroke()}b.forEach(a=>{x.shadowBlur=20;x.shadowColor='#40ff8a';x.fillStyle='#40ff8a';x.fillRect(a.x-15,a.y-9,30,18);x.shadowBlur=0;x.fillStyle='#0b7740';x.fillRect(a.x-3,a.y-9,6,18)});x.fillStyle='#0008';x.beginPath();x.ellipse(p.x,p.y+20,24,9,0,0,7);x.fill();x.save();x.translate(p.x,p.y-p.z);x.fillStyle='#111';x.beginPath();x.arc(0,-17,11,0,7);x.fill();x.fillStyle='#252c33';x.fillRect(-13,-7,26,29);x.fillStyle='#0b0e11';x.fillRect(-14,20,10,15);x.fillRect(4,20,10,15);x.restore()}
+</script></html>
